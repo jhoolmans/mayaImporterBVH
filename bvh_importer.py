@@ -35,6 +35,14 @@ import pymel.core as pm
 import maya.cmds as mc
 import os, sys
 
+class TinyDAG(object):
+	def __init__(self, obj, pObj = None):
+		self.obj = obj
+		self.pObj = pObj
+		
+	def __str__(self):
+		return str(self.obj)
+
 class BVHImporterDialog(object):
 	#
 	# Dialog class..
@@ -81,11 +89,43 @@ class BVHImporterDialog(object):
 		self._read_bvh()
 		
 	def _read_bvh(self):
+		level = 0
+		myParent = None
 		with open(self._filename) as f:
-			print f[0]
+			# Check to see if the file is valid (sort of)
+			if not f.next().startswith("HIERARCHY"):
+				mc.error("No valid .bvh file selected.")
+				return False
+			
 			for line in f:
+				# root joint
 				if line.startswith("ROOT"):
-					print line
+					myParent = TinyDAG(line[5:].rstrip(), None)
+					# strip newline
+				
+				if "JOINT" in line:
+					jnt = line.split(" ")
+					myParent = TinyDAG(jnt[-1].rstrip(), myParent)
+					# strip newline
+
+				if "}" in line:
+					if myParent is not None:
+						myParent = myParent.pObj
+						mc.select(str(myParent))
+						
+				if "CHANNELS" in line:
+					chan = line.strip().split(" ")
+					print chan
+					
+				if "OFFSET" in line:
+					offset = line.strip().split(" ")
+					print offset
+					jnt = pm.joint(name=str(myParent), p=(0,0,0))
+					jnt.translate.set([float(offset[1]), float(offset[2]), float(offset[3])])
+				
+				if myParent is not None:
+					print "parent: %s" % str(myParent.pObj)
+					
 		
 	def _on_select_root(self, e):
 		selection = pm.ls(sl=True)
