@@ -52,7 +52,12 @@ class TinyDAG(object):
 		
 	def __str__(self):
 		return str(self.obj)
-
+		
+	def _fullPath(self):
+		if self.pObj is not None:
+			return "%s|%s" % (self.pObj._fullPath(), self.__str__())
+		return str(self.obj)
+		
 class BVHImporterDialog(object):
 	#
 	# Dialog class..
@@ -136,21 +141,26 @@ class BVHImporterDialog(object):
 						if myParent is not None:
 							myParent = myParent.pObj
 							if myParent is not None:
-								mc.select(str(myParent))
+								mc.select(myParent._fullPath())
 							
 					if "CHANNELS" in line:
 						chan = line.strip().split(" ")
 						if self._debug:
 							print chan
 						
-						for i in range(2, int(chan[1]) ):
-							self._channels.append("%s.%s" % (str(myParent), translationDict[chan[i]] ) )
+						for i in range(int(chan[1]) ):
+							self._channels.append("%s.%s" % (myParent._fullPath(), translationDict[chan[2 + i]] ) )
 						
 					if "OFFSET" in line:
 						offset = line.strip().split(" ")
 						if self._debug:
 							print offset
-						jnt = pm.joint(name=str(myParent), p=(0,0,0))
+						jntName = str(myParent)
+						
+						if safeClose:
+							jntName += "_tip"
+							
+						jnt = pm.joint(name=jntName, p=(0,0,0))
 						jnt.translate.set([float(offset[1]), float(offset[2]), float(offset[3])])
 					
 					if "MOTION" in line:
@@ -158,16 +168,17 @@ class BVHImporterDialog(object):
 					
 					if self._debug:
 						if myParent is not None:
-							print "parent: %s" % str(myParent.pObj)
+							print "parent: %s" % myParent._fullPath()
 				else:
 					if "Frame" not in line:
 						data = line.split(" ")
-						#print "animating.."
 						
+						if self._debug:
+							print "Animating.."
+							print "Data size: %d" % len(data)
+							print "Channels size: %d" % len(self._channels)
 						for x in range(0, len(data) - 1 ):
 							if self._debug:
-								print self._channels[x]
-								print data[x]
 								print "Set Attribute: %s %f" % (self._channels[x], float(data[x]))
 							mc.setAttr(self._channels[x], float(data[x]))
 		
