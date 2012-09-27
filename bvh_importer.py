@@ -111,6 +111,7 @@ class BVHImporterDialog(object):
 		myParent = None
 		safeClose = False
 		motion = False
+		frame = 0
 		
 		with open(self._filename) as f:
 			# Check to see if the file is valid (sort of)
@@ -162,6 +163,8 @@ class BVHImporterDialog(object):
 							
 						jnt = pm.joint(name=jntName, p=(0,0,0))
 						jnt.translate.set([float(offset[1]), float(offset[2]), float(offset[3])])
+						mc.joint(jntName, e=True, zso=True, oj="xyz", sao="yup")
+						jnt.rotateOrder.set(4)
 					
 					if "MOTION" in line:
 						motion = True
@@ -180,7 +183,9 @@ class BVHImporterDialog(object):
 						for x in range(0, len(data) - 1 ):
 							if self._debug:
 								print "Set Attribute: %s %f" % (self._channels[x], float(data[x]))
-							mc.setAttr(self._channels[x], float(data[x]))
+							mc.setKeyframe(self._channels[x], time=frame, value=float(data[x]))
+							
+						frame = frame + 1
 		
 	def _on_select_root(self, e):
 		selection = pm.ls(sl=True)
