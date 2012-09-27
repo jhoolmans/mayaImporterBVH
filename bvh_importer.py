@@ -78,10 +78,11 @@ class BVHImporterDialog(object):
 		
 		self._filename = dialog[0]
 		
-		_read_bvh()
+		self._read_bvh()
 		
 	def _read_bvh(self):
 		with open(self._filename) as f:
+			print f[0]
 			for line in f:
 				if line.startswith("ROOT"):
 					print line
