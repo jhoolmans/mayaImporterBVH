@@ -43,9 +43,29 @@ Linux:
 `/home/<username>/maya/<version>/scripts/`
 
 When the script is in place, launch or restart Maya. 
-Go to your script editor and open a Python tab and run the following code:
+Go to your script editor, open a Python tab and run the following code:
 
 	import bvh_importer
 	bvh_importer.BVHImporterDialog()
 
 Enjoy!
+
+
+Contribution
+------------
+Helping me develop this script even further is highly appreciated! 
+
+Some ways of contributing:
+
+- Report any bugs by going to [Issues](https://github.com/jhoolmans/mayaImporterBVH/issues).
+- Request features at [Issues](https://github.com/jhoolmans/mayaImporterBVH/issues), click 'New Issue' then add the label 'feature request'.
+
+Developers can Fork this repo at [GitHub](https://github.com/jhoolmans/mayaImporterBVH)
+
+- Create a new branch called 'feature name'.
+- Make your changes. 
+- Do a Pull Request and get some coffee!
+
+Contact
+-------
+Any questions related to this script can also be posted at [Issues](https://github.com/jhoolmans/mayaImporterBVH/issues). I will get to you as soon as possible!
