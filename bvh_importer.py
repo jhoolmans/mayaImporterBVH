@@ -57,10 +57,11 @@ class BVHImporterDialog(object):
 	#
 	# Dialog class..
 	#
-	def __init__(self):
+	def __init__(self, debug=False):
 		self._name = "bvhImportDialog"
 		self._textfield = ""
 		self._rootNode = None
+		self._debug = debug
 		
 		# BVH specific stuff
 		self._filename = ""
@@ -91,6 +92,8 @@ class BVHImporterDialog(object):
 		filter = "All Files (*.*);;Motion Capture (*.bvh)"
 		dialog = mc.fileDialog2(fileFilter=filter, dialogStyle=2, fm=1)
 		
+		if dialog is None:
+			return
 		if not len(dialog):
 			return
 		
@@ -137,30 +140,35 @@ class BVHImporterDialog(object):
 							
 					if "CHANNELS" in line:
 						chan = line.strip().split(" ")
+						if self._debug:
+							print chan
 						
 						for i in range(2, int(chan[1]) ):
 							self._channels.append("%s.%s" % (str(myParent), translationDict[chan[i]] ) )
 						
 					if "OFFSET" in line:
 						offset = line.strip().split(" ")
-						print offset
+						if self._debug:
+							print offset
 						jnt = pm.joint(name=str(myParent), p=(0,0,0))
 						jnt.translate.set([float(offset[1]), float(offset[2]), float(offset[3])])
 					
-					if myParent is not None:
-						print "parent: %s" % str(myParent.pObj)
-					
 					if "MOTION" in line:
 						motion = True
+					
+					if self._debug:
+						if myParent is not None:
+							print "parent: %s" % str(myParent.pObj)
 				else:
 					if "Frame" not in line:
 						data = line.split(" ")
-						print "animating.."
+						#print "animating.."
 						
 						for x in range(0, len(data) - 1 ):
-							print self._channels
-							print data
-							print "Set Attribute: %s %f" % (self._channels[x], float(data[x]))
+							if self._debug:
+								print self._channels[x]
+								print data[x]
+								print "Set Attribute: %s %f" % (self._channels[x], float(data[x]))
 							mc.setAttr(self._channels[x], float(data[x]))
 		
 	def _on_select_root(self, e):
