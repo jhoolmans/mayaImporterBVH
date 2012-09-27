@@ -91,6 +91,7 @@ class BVHImporterDialog(object):
 	def _read_bvh(self):
 		level = 0
 		myParent = None
+		safeClose = False
 		with open(self._filename) as f:
 			# Check to see if the file is valid (sort of)
 			if not f.next().startswith("HIERARCHY"):
@@ -100,7 +101,7 @@ class BVHImporterDialog(object):
 			for line in f:
 				# root joint
 				if line.startswith("ROOT"):
-					myParent = TinyDAG(line[5:].rstrip(), None)
+					myParent = TinyDAG(line[5:].rstrip(), myParent)
 					# strip newline
 				
 				if "JOINT" in line:
@@ -108,7 +109,14 @@ class BVHImporterDialog(object):
 					myParent = TinyDAG(jnt[-1].rstrip(), myParent)
 					# strip newline
 
+				if "End Site" in line:
+					safeClose = True
+
 				if "}" in line:
+					if safeClose:
+						safeClose = False
+						continue
+						
 					if myParent is not None:
 						myParent = myParent.pObj
 						mc.select(str(myParent))
