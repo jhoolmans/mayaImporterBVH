@@ -127,7 +127,7 @@ class BVHImporterDialog(object):
 			cs=[(1,5), (2,5)],
 			rs=[(1,5), (2,5)])
 		
-		self._textfield = mc.textField()
+		self._textfield = mc.textField(editable=False)
 		mc.button("Select hips", c=self._on_select_root)
 		
 		mc.setParent("..")
@@ -291,9 +291,11 @@ class BVHImporterDialog(object):
 		# When targeting, set the root joint (Hips)
 		selection = pm.ls(sl=True)
 		if len(selection) == 0:
-			return
-		self._rootNode = selection[0]
-		mc.textField(self._textfield, e=True, text=str(self._rootNode))
+			self._rootNode = None
+			mc.textField(self._textfield, e=True, text="")
+		else:
+			self._rootNode = selection[0]
+			mc.textField(self._textfield, e=True, text=str(self._rootNode))
 		
 if __name__ == "__main__":
 	dialog = BVHImporterDialog()
