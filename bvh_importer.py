@@ -153,8 +153,15 @@ class BVHImporterDialog(object):
 					if "MOTION" in line:
 						motion = True
 				else:
-					print "MOTIONDATA"
-			print self._channels
+					if "Frame" not in line:
+						data = line.split(" ")
+						print "animating.."
+						
+						for x in range(0, len(data) - 1 ):
+							print self._channels
+							print data
+							print "Set Attribute: %s %f" % (self._channels[x], float(data[x]))
+							mc.setAttr(self._channels[x], float(data[x]))
 		
 	def _on_select_root(self, e):
 		selection = pm.ls(sl=True)
