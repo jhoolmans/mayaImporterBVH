@@ -33,6 +33,7 @@ __status__ 		= "Production"
 
 import pymel.core as pm
 import maya.cmds as mc
+import os, sys
 
 class BVHImporterDialog(object):
 	#
@@ -42,6 +43,11 @@ class BVHImporterDialog(object):
 		self._name = "bvhImportDialog"
 		self._textfield = ""
 		self._rootNode = None
+		
+		# BVH specific stuff
+		self._filename = ""
+		self._channels = []
+		
 		self.setup_ui()
 	
 	def setup_ui(self):
@@ -70,8 +76,15 @@ class BVHImporterDialog(object):
 		if not len(dialog):
 			return
 		
-		filepath = dialog[0]
+		self._filename = dialog[0]
 		
+		_read_bvh()
+		
+	def _read_bvh(self):
+		with open(self._filename) as f:
+			for line in f:
+				if line.startswith("ROOT"):
+					print line
 		
 	def _on_select_root(self, e):
 		selection = pm.ls(sl=True)
