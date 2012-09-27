@@ -120,6 +120,7 @@ class BVHImporterDialog(object):
 		level = 0
 		safeClose = False
 		motion = False
+		self._channels = []
 		
 		rigScale = mc.floatField(self._scaleSlider, q=True, value=True)
 		frame = mc.intField(self._frameField, q=True, value=True)
