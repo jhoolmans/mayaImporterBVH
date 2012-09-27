@@ -26,7 +26,7 @@ __author__ 		= "Jeroen Hoolmans"
 __copyright__ 	= "Copyright 2012, Jeroen Hoolmans"
 __credits__ 	= ["Jeroen Hoolmans"]
 __license__ 	= "GPL"
-__version__ 	= "1.0.0"
+__version__ 	= "1.0.1"
 __maintainer__ 	= "Jeroen Hoolmans"
 __email__ 		= "jhoolmans@gmail.com"
 __status__ 		= "Production"
@@ -99,24 +99,40 @@ class BVHImporterDialog(object):
 		# Non sizeable dialog
 		win = mc.window(self._name, title=self._title, w=200, rtf=True, sizeable=False)
 		
-		mc.columnLayout(adj=1)
+		mc.columnLayout(adj=1, rs=5)
+		mc.separator()
+		mc.text("Options")
+		mc.separator()
 		
-#		mc.rowLayout(adj=1, nc=2)
-#		self._textfield = mc.textField()
-#		mc.button("Select root", c=self._on_select_root)
-#		mc.setParent("..")
+		mc.rowColumnLayout( numberOfColumns=2, 
+			columnWidth=[(1, 80), (2, 150)], 
+			cal=[(1, "right"), (2, "center")],
+			cs=[(1,5), (2,5)],
+			rs=[(1,5), (2,5)])
 		
-		mc.rowLayout(adj=2, nc=2)
 		mc.text("Rig scale")
 		self._scaleField = mc.floatField(minValue=0.01, maxValue=2, value=1)
-		mc.setParent("..")
-		
-		mc.rowLayout(adj=2, nc=2)
 		mc.text("Frame offset")
 		self._frameField = mc.intField(minValue=0)
-		mc.setParent("..")
 		
-		mc.button("Import animation..", c=self._on_select_file)
+		mc.setParent("..")
+		mc.separator()
+		
+		# Targeting UI
+		mc.text("Skeleton Targeting")
+		mc.separator()
+		
+		mc.rowColumnLayout( numberOfColumns=2, 
+		columnWidth=[(1, 150), (2, 80)],
+			cs=[(1,5), (2,5)],
+			rs=[(1,5), (2,5)])
+		
+		self._textfield = mc.textField()
+		mc.button("Select hips", c=self._on_select_root)
+		
+		mc.setParent("..")
+		mc.separator()
+		mc.button("Import..", c=self._on_select_file)
 		
 		# Sorry :)
 		mc.text("Created by Jeroen Hoolmans")
