@@ -173,20 +173,26 @@ class BVHImporterDialog(object):
 				mc.error("No valid .bvh file selected.")
 				return False
 			
-			# Create a group for the rig, easier to scale. (Freeze transform when ungrouping please..)
-			mocapName = os.path.basename(self._filename)
-			grp = pm.group(em=True,name="_mocap_%s_grp" % mocapName)
-			grp.scale.set(rigScale, rigScale, rigScale) 
-			
-			# The group is now the 'root'
-			myParent = TinyDAG(str(grp), None)
+			if self._rootNode is None:
+				# Create a group for the rig, easier to scale. (Freeze transform when ungrouping please..)
+				mocapName = os.path.basename(self._filename)
+				grp = pm.group(em=True,name="_mocap_%s_grp" % mocapName)
+				grp.scale.set(rigScale, rigScale, rigScale) 
+				
+				# The group is now the 'root'
+				myParent = TinyDAG(str(grp), None)
+			else:
+				myParent = TinyDAG(str(self._rootNode), None)
 			
 			for line in f:
 				if not motion:
 					# root joint
 					if line.startswith("ROOT"):
 						# Set the Hip joint as root
-						myParent = TinyDAG(line[5:].rstrip(), myParent)
+						if self._rootNode:
+							myParent = TinyDAG(str(self._rootNode), None)
+						else:
+							myParent = TinyDAG(line[5:].rstrip(), myParent)
 					
 					if "JOINT" in line:
 						jnt = line.split(" ")
@@ -227,6 +233,12 @@ class BVHImporterDialog(object):
 						# When End Site is reached, name it "_tip"
 						if safeClose:
 							jntName += "_tip"
+						
+						# skip if exists
+						if mc.objExists(myParent._fullPath()):
+							jnt = pm.PyNode(myParent._fullPath())
+							jnt.translate.set([float(offset[1]), float(offset[2]), float(offset[3])])
+							continue
 						
 						# Build the joint and set its properties
 						jnt = pm.joint(name=jntName, p=(0,0,0))
