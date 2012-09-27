@@ -183,6 +183,7 @@ class BVHImporterDialog(object):
 				myParent = TinyDAG(str(grp), None)
 			else:
 				myParent = TinyDAG(str(self._rootNode), None)
+				self._clear_animation()
 			
 			for line in f:
 				if not motion:
@@ -269,7 +270,23 @@ class BVHImporterDialog(object):
 							mc.setKeyframe(self._channels[x], time=frame, value=float(data[x]))
 						
 						frame = frame + 1
+	
+	def _clear_animation(self):
+		# select root joint
+		pm.select(str(self._rootNode), hi=True)
+		nodes = pm.ls(sl=True)
 		
+		trans_attrs = ["translateX", "translateY", "translateZ"]
+		rot_attrs = ["rotateX", "rotateY", "rotateZ"]
+		for node in nodes:
+			for attr in trans_attrs:
+				connections = node.attr(attr).inputs()
+				pm.delete(connections)
+			for attr in rot_attrs:
+				connections = node.attr(attr).inputs()
+				pm.delete(connections)
+				node.attr(attr).set(0)
+	
 	def _on_select_root(self, e):
 		# When targeting, set the root joint (Hips)
 		selection = pm.ls(sl=True)
