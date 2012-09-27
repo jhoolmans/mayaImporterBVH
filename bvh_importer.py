@@ -83,11 +83,21 @@ class BVHImporterDialog(object):
 		
 		mc.columnLayout(adj=1)
 		
-		mc.rowLayout(adj=1, nc=2)
-		self._textfield = mc.textField()
-		mc.button("Select root", c=self._on_select_root)
+#		mc.rowLayout(adj=1, nc=2)
+#		self._textfield = mc.textField()
+#		mc.button("Select root", c=self._on_select_root)
+#		mc.setParent("..")
 		
+		mc.rowLayout(adj=2, nc=2)
+		mc.text("Rig scale")
+		self._scaleSlider = mc.floatField(minValue=0.01, maxValue=2, value=1)
 		mc.setParent("..")
+		
+		mc.rowLayout(adj=2, nc=2)
+		mc.text("Frame offset")
+		self._frameField = mc.intField(minValue=0)
+		mc.setParent("..")
+		
 		mc.button("Import animation..", c=self._on_select_file)
 		
 		mc.window(win, e=True, rtf=True, sizeable=False)
@@ -111,13 +121,19 @@ class BVHImporterDialog(object):
 		myParent = None
 		safeClose = False
 		motion = False
-		frame = 0
+		
+		rigScale = mc.floatField(self._scaleSlider, q=True, value=True)
+		frame = mc.intField(self._frameField, q=True, value=True)
 		
 		with open(self._filename) as f:
 			# Check to see if the file is valid (sort of)
 			if not f.next().startswith("HIERARCHY"):
 				mc.error("No valid .bvh file selected.")
 				return False
+				
+			mocapName = os.path.basename(self._filename)
+			grp = pm.group(em=True,name="_mocap_%s_grp" % mocapName)
+			grp.scale.set(rigScale, rigScale, rigScale) 
 			
 			for line in f:
 				if not motion:
@@ -172,6 +188,9 @@ class BVHImporterDialog(object):
 					if self._debug:
 						if myParent is not None:
 							print "parent: %s" % myParent._fullPath()
+							
+					if myParent is None:
+						print "Scaling"
 				else:
 					if "Frame" not in line:
 						data = line.split(" ")
