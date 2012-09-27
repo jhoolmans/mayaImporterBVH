@@ -35,6 +35,16 @@ import pymel.core as pm
 import maya.cmds as mc
 import os, sys
 
+translationDict = {
+	"Xposition" : "translateX",
+	"Yposition" : "translateY",
+	"Zposition" : "translateZ",
+	"Xrotation" : "rotateX",
+	"Yrotation" : "rotateY",
+	"Zrotation" : "rotateZ"
+}
+
+
 class TinyDAG(object):
 	def __init__(self, obj, pObj = None):
 		self.obj = obj
@@ -92,6 +102,8 @@ class BVHImporterDialog(object):
 		level = 0
 		myParent = None
 		safeClose = False
+		motion = False
+		
 		with open(self._filename) as f:
 			# Check to see if the file is valid (sort of)
 			if not f.next().startswith("HIERARCHY"):
@@ -99,41 +111,50 @@ class BVHImporterDialog(object):
 				return False
 			
 			for line in f:
-				# root joint
-				if line.startswith("ROOT"):
-					myParent = TinyDAG(line[5:].rstrip(), myParent)
-					# strip newline
-				
-				if "JOINT" in line:
-					jnt = line.split(" ")
-					myParent = TinyDAG(jnt[-1].rstrip(), myParent)
-					# strip newline
-
-				if "End Site" in line:
-					safeClose = True
-
-				if "}" in line:
-					if safeClose:
-						safeClose = False
-						continue
+				if not motion:
+					# root joint
+					if line.startswith("ROOT"):
+						myParent = TinyDAG(line[5:].rstrip(), myParent)
+						# strip newline
+					
+					if "JOINT" in line:
+						jnt = line.split(" ")
+						myParent = TinyDAG(jnt[-1].rstrip(), myParent)
+						# strip newline
+	
+					if "End Site" in line:
+						safeClose = True
+	
+					if "}" in line:
+						if safeClose:
+							safeClose = False
+							continue
+							
+						if myParent is not None:
+							myParent = myParent.pObj
+							if myParent is not None:
+								mc.select(str(myParent))
+							
+					if "CHANNELS" in line:
+						chan = line.strip().split(" ")
 						
+						for i in range(2, int(chan[1]) ):
+							self._channels.append("%s.%s" % (str(myParent), translationDict[chan[i]] ) )
+						
+					if "OFFSET" in line:
+						offset = line.strip().split(" ")
+						print offset
+						jnt = pm.joint(name=str(myParent), p=(0,0,0))
+						jnt.translate.set([float(offset[1]), float(offset[2]), float(offset[3])])
+					
 					if myParent is not None:
-						myParent = myParent.pObj
-						mc.select(str(myParent))
-						
-				if "CHANNELS" in line:
-					chan = line.strip().split(" ")
-					print chan
+						print "parent: %s" % str(myParent.pObj)
 					
-				if "OFFSET" in line:
-					offset = line.strip().split(" ")
-					print offset
-					jnt = pm.joint(name=str(myParent), p=(0,0,0))
-					jnt.translate.set([float(offset[1]), float(offset[2]), float(offset[3])])
-				
-				if myParent is not None:
-					print "parent: %s" % str(myParent.pObj)
-					
+					if "MOTION" in line:
+						motion = True
+				else:
+					print "MOTIONDATA"
+			print self._channels
 		
 	def _on_select_root(self, e):
 		selection = pm.ls(sl=True)
