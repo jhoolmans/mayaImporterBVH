@@ -118,7 +118,6 @@ class BVHImporterDialog(object):
 		
 	def _read_bvh(self):
 		level = 0
-		myParent = None
 		safeClose = False
 		motion = False
 		
@@ -134,6 +133,7 @@ class BVHImporterDialog(object):
 			mocapName = os.path.basename(self._filename)
 			grp = pm.group(em=True,name="_mocap_%s_grp" % mocapName)
 			grp.scale.set(rigScale, rigScale, rigScale) 
+			myParent = TinyDAG(str(grp), None)
 			
 			for line in f:
 				if not motion:
@@ -179,7 +179,6 @@ class BVHImporterDialog(object):
 							
 						jnt = pm.joint(name=jntName, p=(0,0,0))
 						jnt.translate.set([float(offset[1]), float(offset[2]), float(offset[3])])
-						mc.joint(jntName, e=True, zso=True, oj="xyz", sao="yup")
 						jnt.rotateOrder.set(4)
 					
 					if "MOTION" in line:
@@ -189,8 +188,6 @@ class BVHImporterDialog(object):
 						if myParent is not None:
 							print "parent: %s" % myParent._fullPath()
 							
-					if myParent is None:
-						print "Scaling"
 				else:
 					if "Frame" not in line:
 						data = line.split(" ")
