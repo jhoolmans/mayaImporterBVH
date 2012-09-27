@@ -34,7 +34,7 @@ __status__ 		= "Production"
 import pymel.core as pm
 import maya.cmds as mc
 
-class ImporterDialog(object):
+class BVHImporterDialog(object):
 	#
 	# Dialog class..
 	#
@@ -81,4 +81,4 @@ class ImporterDialog(object):
 		mc.textField(self._textfield, e=True, text=str(self._rootNode))
 		
 if __name__ == "__main__":
-	dialog = ImporterDialog()
+	dialog = BVHImporterDialog()
