@@ -79,6 +79,7 @@ class BVHImporterDialog(object):
 		self._textfield = ""
 		self._scaleField = ""
 		self._frameField = ""
+		self._rotationOrder = ""
 		
 		# Other
 		self._rootNode = None # Used for targeting
@@ -114,6 +115,14 @@ class BVHImporterDialog(object):
 		self._scaleField = mc.floatField(minValue=0.01, maxValue=2, value=1)
 		mc.text("Frame offset")
 		self._frameField = mc.intField(minValue=0)
+		mc.text("Rotation Order")
+		self._rotationOrder = mc.optionMenu()
+		mc.menuItem( label='XYZ' )
+		mc.menuItem( label='YZX' )
+		mc.menuItem( label='ZXY' )
+		mc.menuItem( label='XZY' )
+		mc.menuItem( label='YXZ' )
+		mc.menuItem( label='ZYX' )
 		
 		mc.setParent("..")
 		mc.separator()
@@ -143,7 +152,7 @@ class BVHImporterDialog(object):
 	def _on_select_file(self, e):
 		# Without All Files it didn't work for some reason..
 		filter = "All Files (*.*);;Motion Capture (*.bvh)"
-		dialog = mc.fileDialog2(fileFilter=filter, dialogStyle=2, fm=1)
+		dialog = mc.fileDialog2(fileFilter=filter, dialogStyle=1, fm=1)
 		
 		if dialog is None:
 			return
@@ -166,6 +175,7 @@ class BVHImporterDialog(object):
 		# Scale the entire rig and animation
 		rigScale = mc.floatField(self._scaleField, q=True, value=True)
 		frame = mc.intField(self._frameField, q=True, value=True)
+		rotOrder = mc.optionMenu(self._rotationOrder, q=True, select=True) - 1
 		
 		with open(self._filename) as f:
 			# Check to see if the file is valid (sort of)
@@ -238,13 +248,14 @@ class BVHImporterDialog(object):
 						# skip if exists
 						if mc.objExists(myParent._fullPath()):
 							jnt = pm.PyNode(myParent._fullPath())
+							jnt.rotateOrder.set(rotOrder)
 							jnt.translate.set([float(offset[1]), float(offset[2]), float(offset[3])])
 							continue
 						
 						# Build the joint and set its properties
 						jnt = pm.joint(name=jntName, p=(0,0,0))
 						jnt.translate.set([float(offset[1]), float(offset[2]), float(offset[3])])
-						jnt.rotateOrder.set(4)
+						jnt.rotateOrder.set(rotOrder)
 					
 					if "MOTION" in line:
 						# Animate!
