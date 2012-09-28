@@ -80,6 +80,7 @@ class BVHImporterDialog(object):
 		self._scaleField = ""
 		self._frameField = ""
 		self._rotationOrder = ""
+		self._reload = ""
 		
 		# Other
 		self._rootNode = None # Used for targeting
@@ -129,6 +130,7 @@ class BVHImporterDialog(object):
 		
 		# Targeting UI
 		mc.text("Skeleton Targeting")
+		mc.text("(Select the hips)")
 		mc.separator()
 		
 		mc.rowColumnLayout( numberOfColumns=2, 
@@ -137,11 +139,12 @@ class BVHImporterDialog(object):
 			rs=[(1,5), (2,5)])
 		
 		self._textfield = mc.textField(editable=False)
-		mc.button("Select hips", c=self._on_select_root)
+		mc.button("Select/Clear", c=self._on_select_root)
 		
 		mc.setParent("..")
 		mc.separator()
 		mc.button("Import..", c=self._on_select_file)
+		self._reload = mc.button("Reload", enable=False, c=self._read_bvh)
 		
 		# Sorry :)
 		mc.text("Created by Jeroen Hoolmans")
@@ -161,10 +164,12 @@ class BVHImporterDialog(object):
 		
 		self._filename = dialog[0]
 		
+		mc.button(self._reload, e=True, enable=True)
+		
 		# Action!
 		self._read_bvh()
 		
-	def _read_bvh(self):
+	def _read_bvh(self, e=False):
 		# Safe close is needed for End Site part to keep from setting new parent.
 		safeClose = False
 		# Once motion is active, animate.
@@ -300,7 +305,7 @@ class BVHImporterDialog(object):
 	
 	def _on_select_root(self, e):
 		# When targeting, set the root joint (Hips)
-		selection = pm.ls(sl=True)
+		selection = pm.ls(sl=True, type="joint")
 		if len(selection) == 0:
 			self._rootNode = None
 			mc.textField(self._textfield, e=True, text="")
