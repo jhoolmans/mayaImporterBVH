@@ -201,6 +201,7 @@ class BVHImporterDialog(object):
 				self._clear_animation()
 			
 			for line in f:
+				line = line.replace("	"," ") # force spaces
 				if not motion:
 					# root joint
 					if line.startswith("ROOT"):
