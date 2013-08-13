@@ -275,6 +275,8 @@ class BVHImporterDialog(object):
 					# We don't really need to use Framecount and time(since Python handles file reads nicely)
 					if "Frame" not in line:
 						data = line.split(" ")
+						if len(data) > 0:
+							if data[0] == "": data.pop(0)
 						
 						if self._debug:
 							print "Animating.."
