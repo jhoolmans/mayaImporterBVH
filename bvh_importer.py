@@ -2,7 +2,8 @@
 # BVH Importer script for Maya.
 # 
 # Importer for .bvh files (BioVision Hierachy files).
-# BVH is a common ascii motion capture data format containing skeletal and motion data.
+# BVH is a common ascii motion capture data format containing skeletal and
+# motion data.
 # 
 # <license>
 # BVH Importer script for Maya.
@@ -22,9 +23,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # </license>
 import os
+import re
 from typing import Optional
 
 import maya.cmds as mc
+
+space_re = re.compile(r"\s+")
 
 # This maps the BVH naming convention to Maya
 translationDict = {
@@ -59,7 +63,7 @@ class TinyDAG(object):
     def full_path(self) -> str:
         """Returns the full path of the object"""
         if self.parent is not None:
-            return "%s|%s" % (self.parent.full_path(), self.__str__())
+            return "%s|%s" % (self.parent.full_path(), str(self))
         return str(self.obj)
 
 
@@ -102,7 +106,8 @@ class BVHImporterDialog(object):
             mc.deleteUI(win)
 
         # Non sizeable dialog
-        win = mc.window(self._name, title=self._title, w=200, rtf=True, sizeable=False)
+        win = mc.window(self._name, title=self._title, w=200, rtf=True,
+                        sizeable=False)
 
         mc.columnLayout(adj=1, rs=5)
         mc.separator()
@@ -172,8 +177,13 @@ class BVHImporterDialog(object):
         # Action!
         self._read_bvh()
 
-    def _read_bvh(self, e=False):
-        # Safe close is needed for End Site part to keep from setting new parent.
+    def load_bvh(self, filename):
+        self._filename = filename
+        self._read_bvh()
+
+    def _read_bvh(self, *_args):
+        # Safe close is needed for End Site part to keep from setting new
+        # parent.
         safe_close = False
         # Once motion is active, animate.
         motion = False
@@ -192,10 +202,11 @@ class BVHImporterDialog(object):
                 return False
 
             if self._root_node is None:
-                # Create a group for the rig, easier to scale. (Freeze transform when ungrouping please..)
+                # Create a group for the rig, easier to scale.
+                # (Freeze transform when ungrouping please..)
                 mocap_name = os.path.basename(self._filename)
                 grp = mc.group(em=True, name="_mocap_%s_grp" % mocap_name)
-                mc.setAttr("%s.scale" % grp, [rig_scale, rig_scale, rig_scale])
+                mc.setAttr("%s.scale" % grp, rig_scale, rig_scale, rig_scale)
 
                 # The group is now the 'root'
                 my_parent = TinyDAG(grp, None)
@@ -213,11 +224,16 @@ class BVHImporterDialog(object):
                             my_parent = TinyDAG(str(self._root_node), None)
                         else:
                             my_parent = TinyDAG(line[5:].rstrip(), my_parent)
+                            # Update root node in case we want to reload.
+                            self._root_node = my_parent
+                            mc.textField(self._textfield,
+                                         e=True,
+                                         text=my_parent.full_path())
 
                     if "JOINT" in line:
-                        jnt = line.split(" ")
+                        jnt = space_re.split(line.strip())
                         # Create the joint
-                        my_parent = TinyDAG(jnt[-1].rstrip(), my_parent)
+                        my_parent = TinyDAG(jnt[1], my_parent)
 
                     if "End Site" in line:
                         # Finish up a hierarchy and ignore a closing bracket
@@ -236,7 +252,8 @@ class BVHImporterDialog(object):
                                 mc.select(my_parent.full_path())
 
                     if "CHANNELS" in line:
-                        chan = line.strip().split(" ")
+                        chan = line.strip()
+                        chan = space_re.split(chan)
 
                         # Append the channels that are animated
                         for i in range(int(chan[1])):
@@ -246,7 +263,8 @@ class BVHImporterDialog(object):
                             ))
 
                     if "OFFSET" in line:
-                        offset = line.strip().split(" ")
+                        offset = line.strip()
+                        offset = space_re.split(offset)
                         jnt_name = str(my_parent)
 
                         # When End Site is reached, name it "_tip"
@@ -261,7 +279,12 @@ class BVHImporterDialog(object):
                             jnt = mc.joint(name=jnt_name, p=(0, 0, 0))
 
                         mc.setAttr(jnt + ".rotateOrder", rot_order)
-                        mc.setAttr(jnt + ".translate", [float(offset[1]), float(offset[2]), float(offset[3])])
+                        mc.setAttr(
+                            jnt + ".translate",
+                            float(offset[1]),
+                            float(offset[2]),
+                            float(offset[3])
+                        )
 
                     if "MOTION" in line:
                         # Animate!
@@ -271,16 +294,12 @@ class BVHImporterDialog(object):
                     # We don't really need to use Frame count and time
                     # (since Python handles file reads nicely)
                     if "Frame" not in line:
-                        data = line.split(" ")
-                        if len(data) > 0:
-                            if data[0] == "":
-                                data.pop(0)
-
+                        data = space_re.split(line.strip())
                         # Set the values to channels
-                        for x in range(0, len(data) - 1):
-                            mc.setKeyframe(self._channels[x],
+                        for index, value in enumerate(data):
+                            mc.setKeyframe(self._channels[index],
                                            time=frame,
-                                           value=float(data[x]))
+                                           value=float(value))
 
                         frame = frame + 1
 
@@ -301,21 +320,22 @@ class BVHImporterDialog(object):
                 connections = mc.listConnections("%s.%s" % (node, attr),
                                                  s=True,
                                                  d=False)
-                mc.delete(connections)
+                if connections is not None:
+                    mc.delete(connections)
 
             for attr in rot_attrs:
                 # Reset rotation
                 mc.setAttr("%s.%s" % (node, attr), 0)
 
-    def _on_select_root(self, e):
+    def _on_select_root(self, *_args):
         # When targeting, set the root joint (Hips)
-        selection = mc.ls(sl=True, type="joint")
+        selection = mc.ls(sl=True, type="joint", l=True)
         if len(selection) == 0:
             self._root_node = None
             mc.textField(self._textfield, e=True, text="")
         else:
             self._root_node = selection[0]
-            mc.textField(self._textfield, e=True, text=str(self._root_node))
+            mc.textField(self._textfield, e=True, text=self._root_node)
 
 
 if __name__ == "__main__":
