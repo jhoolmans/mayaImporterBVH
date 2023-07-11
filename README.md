@@ -1,6 +1,13 @@
 BVH Importer Script
 ===================
-By [Jeroen Hoolmans](http://github.com/jhoolmans)
+By [Jeroen Hoolmans](https://github.com/jhoolmans)
+
+Python 3 Support
+----------------
+
+The BVH Importer script has been updated to support Python 3.
+
+If you are using Maya with Python 2, please use the [Python 2 branch](https://github.com/jhoolmans/mayaImporterBVH/tree/python2).
 
 Introduction
 ------------
